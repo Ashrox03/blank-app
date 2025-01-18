@@ -1,7 +1,5 @@
-from flask import Flask, request, jsonify, render_template
-
-# Initialize Flask App
-app = Flask(__name__)
+import streamlit as st
+import json
 
 # Placeholder Data for MSMEs
 msme_data = [
@@ -42,80 +40,27 @@ def validate_msme(msme):
     else:
         return f"MSME {msme['name']} is not eligible for credit."
 
-# Routes
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Streamlit App Layout
+st.title("MSME Credit Risk Tool")
 
-@app.route('/retrieve', methods=['GET'])
-def retrieve():
-    query = request.args.get('query', '')
+# Section: Retrieve MSME Data
+st.header("Retrieve MSME Data")
+query = st.text_input("Enter MSME name to search:")
+if st.button("Search"):
     results = retrieve_msme_data(query)
     if results:
-        return jsonify(results)
+        st.subheader("Search Results:")
+        st.json(results)
     else:
-        return jsonify({"message": "No matching MSMEs found."})
+        st.warning("No matching MSMEs found.")
 
-@app.route('/validate', methods=['POST'])
-def validate():
-    msme = request.json
-    result = validate_msme(msme)
-    return jsonify({"validation": result})
-
-# HTML Template (to be saved as templates/index.html)
-html_template = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSME Credit Risk Tool</title>
-    <script>
-        async function fetchMSMEData() {
-            const query = document.getElementById('query').value;
-            const response = await fetch(`/retrieve?query=${query}`);
-            const data = await response.json();
-            document.getElementById('results').innerText = JSON.stringify(data, null, 2);
-        }
-
-        async function validateMSME() {
-            const msme = JSON.parse(document.getElementById('msme').value);
-            const response = await fetch('/validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(msme),
-            });
-            const data = await response.json();
-            document.getElementById('validation').innerText = data.validation;
-        }
-    </script>
-</head>
-<body>
-    <h1>MSME Credit Risk Tool</h1>
-
-    <section>
-        <h2>Retrieve MSME Data</h2>
-        <input type="text" id="query" placeholder="Enter MSME name">
-        <button onclick="fetchMSMEData()">Search</button>
-        <pre id="results"></pre>
-    </section>
-
-    <section>
-        <h2>Validate MSME</h2>
-        <textarea id="msme" placeholder='Enter MSME JSON here'></textarea>
-        <button onclick="validateMSME()">Validate</button>
-        <pre id="validation"></pre>
-    </section>
-</body>
-</html>
-"""
-
-# Save HTML Template to File
-import os
-os.makedirs('templates', exist_ok=True)
-with open('templates/index.html', 'w') as f:
-    f.write(html_template)
-
-# Run the Flask App
-if __name__ == '__main__':
-    app.run(debug=True)
+# Section: Validate MSME
+st.header("Validate MSME")
+msme_json = st.text_area("Enter MSME JSON for validation:")
+if st.button("Validate"):
+    try:
+        msme = json.loads(msme_json)
+        result = validate_msme(msme)
+        st.success(result)
+    except json.JSONDecodeError:
+        st.error("Invalid JSON format. Please check your input.")
