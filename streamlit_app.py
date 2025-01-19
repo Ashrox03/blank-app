@@ -50,12 +50,27 @@ if st.button("Search"):
     results = retrieve_msme_data(query)
     if results:
         st.subheader("Search Results:")
-        st.json(results)
+        for result in results:
+            st.write(f"ID: {result['id']}, Name: {result['name']}, Sector: {result['sector']}, Location: {result['location']}, Annual Revenue: {result['annual_revenue']}, Credit Score: {result['credit_score']}")
     else:
         st.warning("No matching MSMEs found.")
 
 # Section: Validate MSME
 st.header("Validate MSME")
+placeholder_json = {
+    "id": "MSME001",
+    "name": "Greenfield Enterprises",
+    "sector": "Manufacturing",
+    "location": "Mumbai",
+    "annual_revenue": 5000000,
+    "credit_score": 720,
+    "loan_history": [
+        {"amount": 200000, "status": "repaid"},
+        {"amount": 500000, "status": "default"}
+    ]
+}
+st.text("Sample JSON Input:")
+st.json(placeholder_json)
 msme_json = st.text_area("Enter MSME JSON for validation:")
 if st.button("Validate"):
     try:
